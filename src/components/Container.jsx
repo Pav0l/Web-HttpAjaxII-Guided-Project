@@ -3,7 +3,7 @@ import axios from 'axios';
 import { StyledContainer, StyledCrud } from './styled/styled';
 
 
-const personURL = 'http://gabe.mockable.io/person/';
+const personURL = 'http://gabe.mockable.io/person';
 
 const randomBool = () => (
   !(Math.floor(Math.random() * 2))
@@ -49,43 +49,78 @@ export default class Container extends React.Component {
   // }
 
   // CRUD OPERATIONS
-  fetchPerson = () => { // BROKEN!!! WHY??
+  fetchPerson = () => {
     this.resetError();
     this.startSpinner();
 
     axios.get(personURL)
-      .then(this.setPerson)
-      .catch(this.setError);
+      .then(res => this.setPerson(res.data))
+      .catch(this.setError)
+      // .finally = when a promise is settled (fulfilled or rejected), the specified cb function is executed
+      .finally(this.stopSpinner);
   }
 
   fetchTwoPeople = () => {
+    this.resetError();
+    this.startSpinner();
 
+    const promiseA = axios.get(personURL);
+    const promiseB = axios.get(personURL);
+
+    Promise.all([promiseA, promiseB])
+      .then(([res1, res2]) => this.setPeople([res1.data, res2.data]))
+      .catch(this.setError)
+      .finally(this.stopSpinner);
   }
 
   postNewPerson = () => {
+    this.resetError();
+    this.startSpinner();
 
+    const name = this.inputNameRef.current.value;
+    const age = this.inputAgeRef.current.value;
+
+    axios.post(personURL, { name, age })
+      .then(res => this.setPerson(res.data))
+      .catch(this.setError)
+      .finally(this.stopSpinner);
   }
 
   putPerson = () => {
+    this.resetError();
+    this.startSpinner();
 
+    const name = this.inputNameEditRef.current.value;
+    const age = this.inputAgeEditRef.current.value;
+
+    axios.put(`${personURL}/${this.state.person.id}`, { name, age })
+      .then(res => this.setPerson(res.data))
+      .catch(this.setError)
+      .finally(this.stopSpinner);
   }
 
   deletePerson = id => {
+    this.resetError();
+    this.startSpinner();
 
+    axios.delete(`${personURL}/${id}`)
+      .then(res => alert(res.data.message))
+      .catch(this.setError)
+      .finally(this.stopSpinner);
   }
 
   // STATE MANAGEMENT
   setPeople = people => {
-
+    this.setState(prevState => ({
+      people: prevState.people.concat(people),
+    }));
   }
 
   setPerson = person => {
-    this.stopSpinner();
     this.setState({ person });
   }
 
   setError = error => {
-    this.stopSpinner();
     this.setState({ error });
   }
 
